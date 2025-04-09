@@ -1,7 +1,5 @@
-
 import { Event } from '../types';
 import { getAllEvents, saveEventToDB, deleteEventFromDB, getSingleEvent } from './db';
-import { useAuth } from '../contexts/AuthContext';
 
 // We keep generateId function
 export const generateId = (): string => {
@@ -11,31 +9,28 @@ export const generateId = (): string => {
 // These functions will now call the database functions but maintain the same interface
 // so the rest of the app doesn't need to change
 
-export const getEventsWrapper = (): Event[] => {
+export const getEventsWrapper = (userId?: string): Event[] => {
   // This is for compatibility with existing code
-  // In a real app, you would update all components to use the database directly
-  const auth = useAuth();
-  if (!auth.currentUser) {
+  if (!userId) {
     return [];
   }
   
   // Since the DB functions are async but our wrapper needs to return synchronously,
   // we'll handle this by returning empty and letting components fetch directly
   // This is temporary until we refactor all components to use async data loading
-  getAllEvents(auth.currentUser.id)
+  getAllEvents(userId)
     .then(events => console.log('Events loaded:', events.length))
     .catch(err => console.error('Error loading events:', err));
     
   return [];
 };
 
-export const saveEventWrapper = (event: Event): void => {
-  const auth = useAuth();
-  if (!auth.currentUser) {
+export const saveEventWrapper = (event: Event, userId?: string): void => {
+  if (!userId) {
     return;
   }
   
-  saveEventToDB(event, auth.currentUser.id)
+  saveEventToDB(event, userId)
     .catch(err => console.error('Error saving event:', err));
 };
 

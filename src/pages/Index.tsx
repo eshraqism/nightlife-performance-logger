@@ -7,17 +7,35 @@ import { Event } from '../types';
 import Container from '../components/layout/Container';
 import EventCard from '../components/ui/EventCard';
 import { formatCurrency } from '../utils/calculations';
+import { useAuth } from '../contexts/AuthContext';
+import { getAllEvents } from '../utils/db';
 
 const Index = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    // Load events from localStorage
-    const loadedEvents = getEvents();
-    setEvents(loadedEvents);
-    setLoading(false);
-  }, []);
+    const fetchEvents = async () => {
+      try {
+        if (!currentUser) {
+          setEvents([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Use the async db function directly
+        const loadedEvents = await getAllEvents(currentUser.id);
+        setEvents(loadedEvents);
+      } catch (error) {
+        console.error("Error loading events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEvents();
+  }, [currentUser]);
 
   // Calculate total revenue across all events
   const totalRevenue = events.reduce((sum, event) => {

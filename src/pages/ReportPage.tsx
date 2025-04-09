@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -12,10 +11,11 @@ import {
   Loader2
 } from 'lucide-react';
 import Container from '../components/layout/Container';
-import { getEvents } from '../utils/localStorage';
 import { Event } from '../types';
 import { calculateProfit, formatCurrency } from '../utils/calculations';
 import EventCard from '../components/ui/EventCard';
+import { useAuth } from '../contexts/AuthContext';
+import { getAllEvents } from '../utils/db';
 
 const ReportPage = () => {
   const navigate = useNavigate();
@@ -24,25 +24,37 @@ const ReportPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'revenue' | 'profit'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const { currentUser } = useAuth();
   
   useEffect(() => {
-    // Load events from localStorage
-    const loadedEvents = getEvents();
-    setEvents(loadedEvents);
-    setLoading(false);
-  }, []);
+    const fetchEvents = async () => {
+      try {
+        if (!currentUser) {
+          setEvents([]);
+          setLoading(false);
+          return;
+        }
+        
+        const loadedEvents = await getAllEvents(currentUser.id);
+        setEvents(loadedEvents);
+      } catch (error) {
+        console.error("Error loading events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEvents();
+  }, [currentUser]);
   
-  // Calculate total profit for an event (across all event data entries)
   const calculateTotalProfit = (event: Event): number => {
     return event.eventData.reduce((sum, data) => sum + calculateProfit(event, data), 0);
   };
   
-  // Calculate total revenue for an event (across all event data entries)
   const calculateTotalRevenue = (event: Event): number => {
     return event.eventData.reduce((sum, data) => sum + data.totalRevenue, 0);
   };
   
-  // Filter and sort events
   const filteredAndSortedEvents = events
     .filter(event => 
       event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,28 +78,22 @@ const ReportPage = () => {
       return 0;
     });
   
-  // Calculate summary statistics
   const totalRevenue = events.reduce((sum, event) => sum + calculateTotalRevenue(event), 0);
   const totalProfit = events.reduce((sum, event) => sum + calculateTotalProfit(event), 0);
   const averageProfit = events.length > 0 ? totalProfit / events.length : 0;
   
-  // Most profitable event
   const mostProfitableEvent = [...events].sort((a, b) => 
     calculateTotalProfit(b) - calculateTotalProfit(a)
   )[0];
   
-  // Most recent event
   const mostRecentEvent = [...events].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   )[0];
   
-  // Toggle sort order
   const toggleSort = (field: 'date' | 'revenue' | 'profit') => {
     if (sortBy === field) {
-      // Toggle order if already sorting by this field
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new sort field with desc order by default
       setSortBy(field);
       setSortOrder('desc');
     }
@@ -111,7 +117,6 @@ const ReportPage = () => {
           </p>
         </div>
         
-        {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="glass-card rounded-xl p-6">
             <div className="flex items-center justify-between">
@@ -162,7 +167,6 @@ const ReportPage = () => {
           </div>
         </div>
         
-        {/* Event Highlights */}
         {events.length > 0 && (
           <div className="grid gap-6 md:grid-cols-2">
             {mostProfitableEvent && (
@@ -221,7 +225,6 @@ const ReportPage = () => {
           </div>
         )}
         
-        {/* Events List with Filtering and Sorting */}
         <div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-semibold">All Events</h2>
