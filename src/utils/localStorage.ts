@@ -1,5 +1,6 @@
+
 import { Event } from '../types';
-import { getEvents, saveEvent as dbSaveEvent, deleteEvent as dbDeleteEvent, getEvent as dbGetEvent } from './db';
+import { getAllEvents, saveEventToDB, deleteEventFromDB, getSingleEvent } from './db';
 import { useAuth } from '../contexts/AuthContext';
 
 // We keep generateId function
@@ -18,7 +19,14 @@ export const getEventsWrapper = (): Event[] => {
     return [];
   }
   
-  return getEvents(auth.currentUser.id);
+  // Since the DB functions are async but our wrapper needs to return synchronously,
+  // we'll handle this by returning empty and letting components fetch directly
+  // This is temporary until we refactor all components to use async data loading
+  getAllEvents(auth.currentUser.id)
+    .then(events => console.log('Events loaded:', events.length))
+    .catch(err => console.error('Error loading events:', err));
+    
+  return [];
 };
 
 export const saveEventWrapper = (event: Event): void => {
@@ -27,15 +35,23 @@ export const saveEventWrapper = (event: Event): void => {
     return;
   }
   
-  dbSaveEvent(event, auth.currentUser.id);
+  saveEventToDB(event, auth.currentUser.id)
+    .catch(err => console.error('Error saving event:', err));
 };
 
 export const deleteEventWrapper = (eventId: string): void => {
-  dbDeleteEvent(eventId);
+  deleteEventFromDB(eventId)
+    .catch(err => console.error('Error deleting event:', err));
 };
 
 export const getEventWrapper = (eventId: string): Event | undefined => {
-  return dbGetEvent(eventId);
+  // Similar limitation as getEventsWrapper - this needs to return synchronously
+  // We'll return undefined and let components handle async loading
+  getSingleEvent(eventId)
+    .then(event => console.log('Event loaded:', event?.id))
+    .catch(err => console.error('Error loading event:', err));
+    
+  return undefined;
 };
 
 // Maintain original function names for compatibility

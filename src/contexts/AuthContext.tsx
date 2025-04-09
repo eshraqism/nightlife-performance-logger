@@ -23,30 +23,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      const user = getUser(userId);
-      if (user) {
-        setCurrentUser({
-          id: user.id,
-          username: user.username
-        });
-      } else {
-        localStorage.removeItem('userId');
+    const initAuth = async () => {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        const userData = await getUser(userId);
+        if (userData) {
+          setCurrentUser({
+            id: userData.id,
+            username: userData.username
+          });
+        } else {
+          localStorage.removeItem('userId');
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    initAuth().catch(error => {
+      console.error("Auth initialization error:", error);
+      setIsLoading(false);
+    });
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    const userId = authenticateUser(username, password);
+    const userId = await authenticateUser(username, password);
     
     if (userId) {
-      const user = getUser(userId);
-      if (user) {
+      const userData = await getUser(userId);
+      if (userData) {
         setCurrentUser({
-          id: user.id,
-          username: user.username
+          id: userData.id,
+          username: userData.username
         });
         localStorage.setItem('userId', userId);
         return true;
