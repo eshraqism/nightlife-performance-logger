@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -12,7 +11,8 @@ import {
   Users, 
   Plus, 
   Trash2,
-  ArrowLeft
+  ArrowLeft,
+  Tag
 } from 'lucide-react';
 import Container from '../components/layout/Container';
 import { 
@@ -28,7 +28,7 @@ const DAYS_OF_WEEK: DayOfWeek[] = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
 ];
 
-const DEAL_TYPES: DealType[] = ['Revenue Share', 'Entrance Deal'];
+const DEAL_TYPES: DealType[] = ['Revenue Share', 'Entrance Deal', 'Both'];
 
 const PAYMENT_TERMS: PaymentTerms[] = [
   '50% upfront', 'Weekly', 'Bi-weekly', 'Monthly', 'End of month', 'Other'
@@ -38,7 +38,6 @@ const CreateEvent = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  // Form state
   const [name, setName] = useState('');
   const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek>('Friday');
   const [date, setDate] = useState('');
@@ -50,17 +49,14 @@ const CreateEvent = () => {
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerms>('50% upfront');
   const [partners, setPartners] = useState<Partner[]>([{ name: '', percentage: 0 }]);
   
-  // Add partner
   const addPartner = () => {
     setPartners([...partners, { name: '', percentage: 0 }]);
   };
   
-  // Remove partner
   const removePartner = (index: number) => {
     setPartners(partners.filter((_, i) => i !== index));
   };
   
-  // Update partner
   const updatePartner = (index: number, field: keyof Partner, value: string | number) => {
     const updatedPartners = [...partners];
     updatedPartners[index] = { 
@@ -70,22 +66,18 @@ const CreateEvent = () => {
     setPartners(updatedPartners);
   };
   
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Validate form
     if (!name || !date || !time || !venueName || !location) {
       toast.error("Please fill in all required fields");
       setLoading(false);
       return;
     }
     
-    // Filter out empty partners
     const filteredPartners = partners.filter(p => p.name.trim() !== '');
     
-    // Create event object
     const newEvent: EventType = {
       id: generateId(),
       name,
@@ -103,10 +95,8 @@ const CreateEvent = () => {
       updatedAt: new Date().toISOString()
     };
     
-    // Save event to localStorage
     saveEvent(newEvent);
     
-    // Show success toast and navigate to event detail
     toast.success("Event created successfully!");
     navigate(`/event/${newEvent.id}`);
   };
@@ -129,7 +119,6 @@ const CreateEvent = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-8 glass-card rounded-xl p-8">
-          {/* Basic Event Details */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Event Details</h2>
             
@@ -240,7 +229,6 @@ const CreateEvent = () => {
             </div>
           </div>
           
-          {/* Deal Information */}
           <div className="space-y-6 pt-6 border-t">
             <h2 className="text-xl font-semibold">Deal Information</h2>
             
@@ -249,19 +237,22 @@ const CreateEvent = () => {
                 <label htmlFor="dealType" className="text-sm font-medium">
                   Deal Type <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="dealType"
-                  value={dealType}
-                  onChange={(e) => setDealType(e.target.value as DealType)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  required
-                >
-                  {DEAL_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <select
+                    id="dealType"
+                    value={dealType}
+                    onChange={(e) => setDealType(e.target.value as DealType)}
+                    className="pl-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  >
+                    {DEAL_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -307,7 +298,6 @@ const CreateEvent = () => {
             </div>
           </div>
           
-          {/* Partners */}
           <div className="space-y-6 pt-6 border-t">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Partners Involved</h2>
@@ -376,7 +366,6 @@ const CreateEvent = () => {
             </div>
           </div>
           
-          {/* Submit Button */}
           <div className="pt-6 border-t flex justify-end">
             <button
               type="submit"

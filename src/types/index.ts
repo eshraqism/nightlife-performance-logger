@@ -1,7 +1,6 @@
-
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-export type DealType = 'Revenue Share' | 'Entrance Deal';
+export type DealType = 'Revenue Share' | 'Entrance Deal' | 'Both';
 
 export type PaymentTerms = '50% upfront' | 'Weekly' | 'Bi-weekly' | 'Monthly' | 'End of month' | 'Other';
 
