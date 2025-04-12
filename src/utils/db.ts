@@ -1,8 +1,6 @@
-
 // Import IndexedDB helper library
 import { openDB, deleteDB } from 'idb';
 import { Event } from '../types';
-import { generateId } from './localStorage';
 
 // Define database schema
 const DB_NAME = 'nightlifeDB';

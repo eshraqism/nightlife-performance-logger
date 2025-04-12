@@ -1,10 +1,11 @@
 import { Event } from '../types';
-import { getAllEvents, saveEventToDB, deleteEventFromDB, getSingleEvent } from './db';
-
-// We keep generateId function
-export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
+import { 
+  getAllEvents, 
+  saveEventToDB, 
+  deleteEventFromDB, 
+  getSingleEvent,
+  generateId  // Import generateId from db.ts
+} from './db';
 
 // These functions will now call the database functions but maintain the same interface
 // so the rest of the app doesn't need to change
