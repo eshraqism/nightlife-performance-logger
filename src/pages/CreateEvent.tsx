@@ -22,7 +22,8 @@ import {
   Partner,
   Event as EventType
 } from '../types';
-import { saveEvent, generateId } from '../utils/localStorage';
+import { saveEventToDB, generateId } from '../utils/db';
+import { useAuth } from '../contexts/AuthContext';
 
 const DAYS_OF_WEEK: DayOfWeek[] = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
@@ -36,6 +37,7 @@ const PAYMENT_TERMS: PaymentTerms[] = [
 
 const CreateEvent = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   
   const [name, setName] = useState('');
@@ -66,11 +68,11 @@ const CreateEvent = () => {
     setPartners(updatedPartners);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    if (!name || !date || !time || !venueName || !location) {
+    if (!name || !date || !time || !venueName || !location || !currentUser?.id) {
       toast.error("Please fill in all required fields");
       setLoading(false);
       return;
@@ -95,10 +97,15 @@ const CreateEvent = () => {
       updatedAt: new Date().toISOString()
     };
     
-    saveEvent(newEvent);
-    
-    toast.success("Event created successfully!");
-    navigate(`/event/${newEvent.id}`);
+    try {
+      await saveEventToDB(newEvent, currentUser.id);
+      toast.success("Event created successfully!");
+      navigate(`/event/${newEvent.id}`);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event. Please try again.");
+      setLoading(false);
+    }
   };
   
   return (

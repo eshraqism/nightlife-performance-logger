@@ -84,6 +84,11 @@ export const getUser = async (userId: string) => {
   }
 };
 
+// Generate an ID for new events
+export const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 // Event functions
 export const getAllEvents = async (userId: string): Promise<Event[]> => {
   try {
@@ -154,6 +159,7 @@ export const saveEventToDB = async (event: Event, userId: string): Promise<void>
     }
   } catch (error) {
     console.error('Error saving event:', error);
+    throw new Error('Failed to save event');
   }
 };
 
@@ -163,6 +169,7 @@ export const deleteEventFromDB = async (eventId: string): Promise<void> => {
     await db.delete(EVENTS_STORE, eventId);
   } catch (error) {
     console.error('Error deleting event:', error);
+    throw new Error('Failed to delete event');
   }
 };
 
@@ -188,7 +195,7 @@ export const migrateLocalStorageToIndexedDB = async (userId: string): Promise<vo
   }
 };
 
-// Export with clear names to avoid conflicts
+// Export functions
 export { getAllEvents as getEvents };
 export { getSingleEvent as getEvent };
 export { saveEventToDB as saveEvent };

@@ -32,10 +32,11 @@ import {
   AdSpend 
 } from '../types';
 import { 
-  getEvent, 
-  saveEvent, 
-  deleteEvent 
-} from '../utils/localStorage';
+  getSingleEvent as getEvent, 
+  saveEventToDB as saveEvent, 
+  deleteEventFromDB as deleteEvent 
+} from '../utils/db';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   calculateTotalCommissions, 
   calculateTotalExpenses, 
@@ -47,6 +48,7 @@ import {
 const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,17 +73,27 @@ const EventDetail = () => {
   
   // Get the event data on component mount
   useEffect(() => {
-    if (id) {
-      const foundEvent = getEvent(id);
-      if (foundEvent) {
-        setEvent(foundEvent);
-      } else {
-        toast.error('Event not found');
-        navigate('/');
+    async function loadEvent() {
+      if (id && currentUser?.id) {
+        try {
+          const foundEvent = await getEvent(id);
+          if (foundEvent) {
+            setEvent(foundEvent);
+          } else {
+            toast.error('Event not found');
+            navigate('/');
+          }
+        } catch (error) {
+          console.error('Error loading event:', error);
+          toast.error('Failed to load event data');
+        } finally {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     }
-  }, [id, navigate]);
+    
+    loadEvent();
+  }, [id, navigate, currentUser]);
   
   // Format the date for display
   const formatDate = (dateString: string) => {
@@ -185,9 +197,9 @@ const EventDetail = () => {
   };
   
   // Submit the new event data
-  const handleSubmitEventData = (e: React.FormEvent) => {
+  const handleSubmitEventData = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!event) return;
+    if (!event || !currentUser?.id) return;
     
     setSaving(true);
     
@@ -212,7 +224,7 @@ const EventDetail = () => {
       vipGirlsCommissions: filteredVipGirls,
       adSpend: filteredAdSpend,
       leadsCollected,
-      doorRevenue: event.dealType === 'Entrance Deal' ? doorRevenue : undefined,
+      doorRevenue: event.dealType === 'Entrance Deal' || event.dealType === 'Both' ? doorRevenue : undefined,
       totalRevenue,
       totalAttendees,
       tablesFromRumba,
@@ -229,17 +241,23 @@ const EventDetail = () => {
       updatedAt: new Date().toISOString()
     };
     
-    // Save the updated event
-    saveEvent(updatedEvent);
-    setEvent(updatedEvent);
-    
-    // Reset form and hide it
-    resetForm();
-    setShowAddEntryForm(false);
-    
-    // Show success toast
-    toast.success('Event data added successfully!');
-    setSaving(false);
+    try {
+      // Save the updated event
+      await saveEvent(updatedEvent, currentUser.id);
+      setEvent(updatedEvent);
+      
+      // Reset form and hide it
+      resetForm();
+      setShowAddEntryForm(false);
+      
+      // Show success toast
+      toast.success('Event data added successfully!');
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error('Failed to save event data');
+    } finally {
+      setSaving(false);
+    }
   };
   
   // Reset the form
@@ -261,8 +279,8 @@ const EventDetail = () => {
   };
   
   // Delete an event data entry
-  const handleDeleteEventData = (index: number) => {
-    if (!event) return;
+  const handleDeleteEventData = async (index: number) => {
+    if (!event || !currentUser?.id) return;
     
     const confirmed = window.confirm('Are you sure you want to delete this event data?');
     if (!confirmed) return;
@@ -276,23 +294,31 @@ const EventDetail = () => {
       updatedAt: new Date().toISOString()
     };
     
-    saveEvent(updatedEvent);
-    setEvent(updatedEvent);
-    
-    toast.success('Event data deleted successfully!');
+    try {
+      await saveEvent(updatedEvent, currentUser.id);
+      setEvent(updatedEvent);
+      toast.success('Event data deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting event data:', error);
+      toast.error('Failed to delete event data');
+    }
   };
   
   // Delete the entire event
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (!event) return;
     
     const confirmed = window.confirm('Are you sure you want to delete this event? This action cannot be undone.');
     if (!confirmed) return;
     
-    deleteEvent(event.id);
-    navigate('/');
-    
-    toast.success('Event deleted successfully!');
+    try {
+      await deleteEvent(event.id);
+      navigate('/');
+      toast.success('Event deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error('Failed to delete event');
+    }
   };
   
   // Event Data Card Component
