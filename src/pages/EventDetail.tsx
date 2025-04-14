@@ -214,7 +214,7 @@ const EventDetail = () => {
       vipGirlsCommissions: filteredVipGirls,
       adSpend: filteredAdSpend,
       leadsCollected,
-      doorRevenue: event.dealType === 'Entrance Deal' || event.dealType === 'Both' ? doorRevenue : undefined,
+      doorRevenue: event.dealType === 'Entrance Deal' || event.dealType === 'Revenue Share & Entrance Deal' ? doorRevenue : undefined,
       totalRevenue,
       totalAttendees,
       tablesFromRumba,
