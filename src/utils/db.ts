@@ -11,6 +11,11 @@ export function generateId(): string {
 // Authentication
 export async function createUser(username: string, password: string): Promise<string | null> {
   try {
+    // Validate password length before attempting to create user
+    if (password.length < 6) {
+      throw new Error('Password should be at least 6 characters.');
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email: username,
       password: password

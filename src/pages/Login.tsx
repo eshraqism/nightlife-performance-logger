@@ -21,28 +21,67 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const validateInputs = () => {
+    if (!username || !username.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password should be at least 6 characters",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (!isLogin && password !== confirmPassword) {
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please make sure your passwords match",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateInputs()) {
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
       if (!isLogin) {
         // Register
-        if (password !== confirmPassword) {
+        const userId = await createUser(username, password);
+        
+        if (userId) {
+          toast({
+            title: "Success",
+            description: "Account created! Please login.",
+          });
+          setIsLogin(true);
+          // Reset password fields
+          setPassword('');
+          setConfirmPassword('');
+        } else {
           toast({
             title: "Error",
-            description: "Passwords don't match",
+            description: "Failed to create account. Email might already be in use.",
             variant: "destructive"
           });
-          return;
         }
-        
-        createUser(username, password);
-        toast({
-          title: "Success",
-          description: "Account created! Please login.",
-        });
-        setIsLogin(true);
       } else {
         // Login
         const success = await login(username, password);
@@ -61,10 +100,10 @@ const Login = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: error?.message || "An error occurred",
         variant: "destructive"
       });
     } finally {
@@ -89,12 +128,14 @@ const Login = () => {
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email</Label>
               <Input
                 id="username"
+                type="email" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                placeholder="your@email.com"
               />
             </div>
             
@@ -106,7 +147,11 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                placeholder={!isLogin ? "At least 6 characters" : "Enter password"}
               />
+              {!isLogin && password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-red-500 mt-1">Password must be at least 6 characters</p>
+              )}
             </div>
             
             {!isLogin && (
@@ -118,7 +163,11 @@ const Login = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  placeholder="Confirm your password"
                 />
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">Passwords don't match</p>
+                )}
               </div>
             )}
             
@@ -130,7 +179,11 @@ const Login = () => {
           <div className="mt-4 text-center">
             <Button
               variant="link"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setPassword('');
+                setConfirmPassword('');
+              }}
               className="text-sm"
               type="button"
             >
