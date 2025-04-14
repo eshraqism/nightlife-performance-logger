@@ -66,12 +66,16 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  if (!config || Object.keys(config).length === 0) {
+    return null;
+  }
+
   const colorConfig = Object.entries(config).filter(
-    ([_, config]) => config.theme || config.color
-  )
+    ([_, config]) => (config && (config.theme || config.color))
+  );
 
   if (!colorConfig.length) {
-    return null
+    return null;
   }
 
   return (
@@ -84,10 +88,12 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+      (itemConfig && itemConfig.theme) ? 
+        itemConfig.theme[theme as keyof typeof itemConfig.theme] : 
+        (itemConfig ? itemConfig.color : null);
+    return color ? `  --color-${key}: ${color};` : null;
   })
+  .filter(Boolean)
   .join("\n")}
 }
 `
@@ -95,7 +101,7 @@ ${colorConfig
           .join("\n"),
       }}
     />
-  )
+  );
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

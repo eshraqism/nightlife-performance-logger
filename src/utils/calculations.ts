@@ -32,6 +32,12 @@ export const calculateRumbaRevenue = (event: Event, eventData: EventData): numbe
   } else if (event.dealType === 'Entrance Deal') {
     // Revenue is a percentage of the door revenue
     revenue = eventData.doorRevenue ? (eventData.doorRevenue * event.rumbaPercentage) / 100 : 0;
+  } else if (event.dealType === 'Revenue Share & Entrance Deal') {
+    // Revenue is a percentage of both total revenue and entrance revenue
+    const totalRevenuePart = (eventData.totalRevenue * event.rumbaPercentage) / 100;
+    const entranceRevenuePart = eventData.entranceRevenue && event.entrancePercentage ? 
+      (eventData.entranceRevenue * event.entrancePercentage) / 100 : 0;
+    revenue = totalRevenuePart + entranceRevenuePart;
   }
   
   return revenue;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -44,7 +43,6 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Cell } from "recharts";
 import { calculateTotalExpenses, calculateProfit } from '../utils/calculations';
 
-// Sample data for charts
 const timeSeriesData = [
   { month: 'Jan', revenue: 5000, expenses: 3000 },
   { month: 'Feb', revenue: 7000, expenses: 4000 },
@@ -80,7 +78,6 @@ const Index = () => {
           return;
         }
         
-        // Use the async db function directly
         const loadedEvents = await getAllEvents(currentUser.id);
         setEvents(loadedEvents);
       } catch (error) {
@@ -93,24 +90,20 @@ const Index = () => {
     fetchEvents();
   }, [currentUser]);
 
-  // Calculate total revenue across all events
   const totalRevenue = events.reduce((sum, event) => {
     return sum + event.eventData.reduce((eventSum, data) => eventSum + data.totalRevenue, 0);
   }, 0);
 
-  // Calculate total expenses
   const totalExpenses = events.reduce((sum, event) => {
     return sum + event.eventData.reduce((eventSum, data) => eventSum + calculateTotalExpenses(data), 0);
   }, 0);
 
-  // Calculate total profit
   const totalProfit = events.reduce((sum, event) => {
     return sum + event.eventData.reduce((eventSum, data) => {
       return eventSum + calculateProfit(event, data);
     }, 0);
   }, 0);
 
-  // Filter events based on the selected filter
   const filteredEvents = () => {
     const sortedEvents = [...events].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -143,16 +136,13 @@ const Index = () => {
     }
   };
 
-  // ROI calculation
   const calculateROI = () => {
     if (totalExpenses === 0) return 0;
     return (totalProfit / totalExpenses) * 100;
   };
 
-  // Average spend per event
   const avgSpendPerEvent = events.length > 0 ? totalExpenses / events.length : 0;
   
-  // Average profit per event
   const avgProfitPerEvent = events.length > 0 ? totalProfit / events.length : 0;
 
   return (
@@ -185,7 +175,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* 1. Performance Summary Overview */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Performance Summary</h2>
@@ -280,7 +269,6 @@ const Index = () => {
         </div>
         
         <div className="grid gap-6 md:grid-cols-2">
-          {/* 2. Progress Tracker / Goal Widget */}
           <Card>
             <CardHeader>
               <CardTitle>Monthly Revenue Goal</CardTitle>
@@ -302,7 +290,6 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* 3. Upcoming Tasks / Action Items */}
           <Card>
             <CardHeader>
               <CardTitle>Action Items</CardTitle>
@@ -342,7 +329,6 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* 5. Notifications & Alerts */}
         <Card>
           <CardHeader>
             <CardTitle>Alerts & Notifications</CardTitle>
@@ -367,7 +353,6 @@ const Index = () => {
           </CardContent>
         </Card>
         
-        {/* Charts Section */}
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -375,7 +360,13 @@ const Index = () => {
               <CardDescription>Trend over the past 6 months</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer className="h-[300px]" config={{ revenue: { color: "#0088FE" }, expenses: { color: "#FF8042" } }}>
+              <ChartContainer 
+                className="h-[300px]" 
+                config={{ 
+                  revenue: { color: "#0088FE" }, 
+                  expenses: { color: "#FF8042" } 
+                }}
+              >
                 <LineChart data={timeSeriesData}>
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -394,7 +385,15 @@ const Index = () => {
               <CardDescription>Where your money goes</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer className="h-[300px]">
+              <ChartContainer 
+                className="h-[300px]" 
+                config={{ 
+                  Venue: { color: "#0088FE" },
+                  Staff: { color: "#00C49F" },
+                  Marketing: { color: "#FFBB28" },
+                  Other: { color: "#FF8042" }
+                }}
+              >
                 <PieChart>
                   <Pie 
                     data={expenseBreakdownData} 
@@ -417,7 +416,6 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* 4. Latest Events Summary */}
         <Card>
           <CardHeader className="space-y-0">
             <div className="flex justify-between items-center">

@@ -1,7 +1,7 @@
 
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-export type DealType = 'Revenue Share' | 'Revenue Share & Entrance Deal';
+export type DealType = 'Revenue Share' | 'Revenue Share & Entrance Deal' | 'Entrance Deal';
 
 export type PaymentTerms = 'One week' | 'Two weeks' | 'Three weeks' | 'One month';
 
@@ -68,9 +68,12 @@ export type Event = {
   dayOfWeek?: DayOfWeek; // Required for weekly events
   date: string; // ISO string date of the event start
   venueName: string;
+  location?: string; // Added missing property
+  time?: string; // Added missing property
   dealType: DealType;
   commissionBrackets: CommissionBracket[];
   isPaidFromEachBracket: boolean;
+  rumbaPercentage: number; // Added missing property
   entrancePercentage?: number; // Only for 'Revenue Share & Entrance Deal'
   paymentTerms: PaymentTerms;
   partners: Partner[];

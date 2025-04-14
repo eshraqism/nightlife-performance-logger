@@ -39,14 +39,16 @@ const EventCard = ({ event }: EventCardProps) => {
             <span>{event.dayOfWeek}, {formattedDate}</span>
           </div>
           
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Clock className="mr-2 h-4 w-4" />
-            <span>{event.time}</span>
-          </div>
+          {event.time && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Clock className="mr-2 h-4 w-4" />
+              <span>{event.time}</span>
+            </div>
+          )}
           
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4" />
-            <span>{event.venueName}, {event.location}</span>
+            <span>{event.venueName}{event.location ? `, ${event.location}` : ''}</span>
           </div>
           
           <div className="flex items-center text-sm text-muted-foreground">
