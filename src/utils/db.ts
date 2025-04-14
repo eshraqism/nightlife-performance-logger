@@ -1,200 +1,159 @@
-// Import IndexedDB helper library
-import { openDB, deleteDB } from 'idb';
+
+import { v4 as uuidv4 } from 'uuid';
 import { Event } from '../types';
+import { supabase } from '../integrations/supabase/client';
 
-// Define database schema
-const DB_NAME = 'nightlifeDB';
-const DB_VERSION = 1;
-const USERS_STORE = 'users';
-const EVENTS_STORE = 'events';
-
-// Initialize the database
-const initDB = async () => {
-  const db = await openDB(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion, newVersion) {
-      // Create users store if it doesn't exist
-      if (!db.objectStoreNames.contains(USERS_STORE)) {
-        const userStore = db.createObjectStore(USERS_STORE, { keyPath: 'id' });
-        userStore.createIndex('username', 'username', { unique: true });
-      }
-      
-      // Create events store if it doesn't exist
-      if (!db.objectStoreNames.contains(EVENTS_STORE)) {
-        const eventStore = db.createObjectStore(EVENTS_STORE, { keyPath: 'id' });
-        eventStore.createIndex('userId', 'userId', { unique: false });
-      }
-    }
-  });
-  return db;
-};
-
-// User functions
-export const createUser = async (username: string, password: string): Promise<string> => {
-  const id = generateId();
-  const now = new Date().toISOString();
+// Create a new event
+export async function saveEventToDB(event: Event, userId: string): Promise<Event> {
+  // If the event doesn't have an ID, create one
+  const eventWithId = !event.id ? { ...event, id: uuidv4() } : event;
   
-  try {
-    const db = await initDB();
-    await db.put(USERS_STORE, {
-      id,
-      username,
-      password, // Note: In a real app, this should be hashed
-      created_at: now
-    });
-    return id;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw new Error('Failed to create user');
-  }
-};
-
-export const authenticateUser = async (username: string, password: string): Promise<string | null> => {
-  try {
-    const db = await initDB();
-    const tx = db.transaction(USERS_STORE, 'readonly');
-    const store = tx.objectStore(USERS_STORE);
-    const index = store.index('username');
-    
-    const user = await index.get(username);
-    
-    if (user && user.password === password) {
-      return user.id;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error authenticating user:', error);
-    return null;
-  }
-};
-
-export const getUser = async (userId: string) => {
-  try {
-    const db = await initDB();
-    const user = await db.get(USERS_STORE, userId);
-    return user ? {
-      id: user.id,
-      username: user.username,
-      created_at: user.created_at
-    } : null;
-  } catch (error) {
-    console.error('Error getting user:', error);
-    return null;
-  }
-};
-
-// Generate an ID for new events
-export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
-
-// Event functions
-export const getAllEvents = async (userId: string): Promise<Event[]> => {
-  try {
-    const db = await initDB();
-    const tx = db.transaction(EVENTS_STORE, 'readonly');
-    const store = tx.objectStore(EVENTS_STORE);
-    const index = store.index('userId');
-    
-    const events = await index.getAll(userId);
-    
-    return events.map(event => ({
-      ...event,
-      partners: typeof event.partners === 'string' ? JSON.parse(event.partners) : event.partners,
-      eventData: typeof event.eventData === 'string' ? JSON.parse(event.eventData) : event.eventData
-    }));
-  } catch (error) {
-    console.error('Error getting events:', error);
-    return [];
-  }
-};
-
-export const getSingleEvent = async (eventId: string): Promise<Event | undefined> => {
-  try {
-    const db = await initDB();
-    const event = await db.get(EVENTS_STORE, eventId);
-    
-    if (!event) return undefined;
-    
-    return {
-      ...event,
-      partners: typeof event.partners === 'string' ? JSON.parse(event.partners) : event.partners,
-      eventData: typeof event.eventData === 'string' ? JSON.parse(event.eventData) : event.eventData
-    };
-  } catch (error) {
-    console.error('Error getting event:', error);
-    return undefined;
-  }
-};
-
-export const saveEventToDB = async (event: Event, userId: string): Promise<void> => {
+  // Set timestamps
   const now = new Date().toISOString();
-  
-  try {
-    const db = await initDB();
-    const existingEvent = await db.get(EVENTS_STORE, event.id);
-    
-    // Prepare event data ensuring partners and eventData are stored as strings
-    const eventToSave = {
-      ...event,
-      partners: typeof event.partners === 'string' ? event.partners : JSON.stringify(event.partners),
-      eventData: typeof event.eventData === 'string' ? event.eventData : JSON.stringify(event.eventData),
-      userId
-    };
-    
-    if (existingEvent) {
-      // Update existing event
-      await db.put(EVENTS_STORE, {
-        ...eventToSave,
-        updatedAt: now
-      });
-    } else {
-      // Create new event
-      await db.put(EVENTS_STORE, {
-        ...eventToSave,
-        createdAt: now,
-        updatedAt: now
-      });
+  const eventWithTimestamps = {
+    ...eventWithId,
+    createdAt: eventWithId.createdAt || now,
+    updatedAt: now
+  };
+
+  const { data, error } = await supabase
+    .from('events')
+    .upsert({
+      id: eventWithTimestamps.id,
+      name: eventWithTimestamps.name,
+      frequency: eventWithTimestamps.frequency,
+      day_of_week: eventWithTimestamps.dayOfWeek,
+      date: eventWithTimestamps.date,
+      venue_name: eventWithTimestamps.venueName,
+      location: eventWithTimestamps.location,
+      time: eventWithTimestamps.time,
+      deal_type: eventWithTimestamps.dealType,
+      commission_brackets: eventWithTimestamps.commissionBrackets,
+      is_paid_from_each_bracket: eventWithTimestamps.isPaidFromEachBracket,
+      rumba_percentage: eventWithTimestamps.rumbaPercentage,
+      entrance_percentage: eventWithTimestamps.entrancePercentage,
+      payment_terms: eventWithTimestamps.paymentTerms,
+      partners: eventWithTimestamps.partners,
+      event_data: eventWithTimestamps.eventData,
+      created_at: eventWithTimestamps.createdAt,
+      updated_at: eventWithTimestamps.updatedAt,
+      user_id: userId
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error saving event to Supabase:', error);
+    throw error;
+  }
+
+  // Convert from snake_case DB format to camelCase for frontend
+  return {
+    id: data.id,
+    name: data.name,
+    frequency: data.frequency,
+    dayOfWeek: data.day_of_week,
+    date: data.date,
+    venueName: data.venue_name,
+    location: data.location,
+    time: data.time,
+    dealType: data.deal_type,
+    commissionBrackets: data.commission_brackets,
+    isPaidFromEachBracket: data.is_paid_from_each_bracket,
+    rumbaPercentage: data.rumba_percentage,
+    entrancePercentage: data.entrance_percentage,
+    paymentTerms: data.payment_terms,
+    partners: data.partners,
+    eventData: data.event_data,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  };
+}
+
+// Get all events for a user
+export async function getAllEvents(userId: string): Promise<Event[]> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching events from Supabase:', error);
+    throw error;
+  }
+
+  // Convert from snake_case DB format to camelCase for frontend
+  return data.map(event => ({
+    id: event.id,
+    name: event.name,
+    frequency: event.frequency,
+    dayOfWeek: event.day_of_week,
+    date: event.date,
+    venueName: event.venue_name,
+    location: event.location,
+    time: event.time,
+    dealType: event.deal_type,
+    commissionBrackets: event.commission_brackets,
+    isPaidFromEachBracket: event.is_paid_from_each_bracket,
+    rumbaPercentage: event.rumba_percentage,
+    entrancePercentage: event.entrance_percentage,
+    paymentTerms: event.payment_terms,
+    partners: event.partners,
+    eventData: event.event_data,
+    createdAt: event.created_at,
+    updatedAt: event.updated_at
+  }));
+}
+
+// Get a single event
+export async function getSingleEvent(id: string): Promise<Event | null> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') { // Code for "No rows found"
+      return null;
     }
-  } catch (error) {
-    console.error('Error saving event:', error);
-    throw new Error('Failed to save event');
+    console.error('Error fetching event from Supabase:', error);
+    throw error;
   }
-};
 
-export const deleteEventFromDB = async (eventId: string): Promise<void> => {
-  try {
-    const db = await initDB();
-    await db.delete(EVENTS_STORE, eventId);
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    throw new Error('Failed to delete event');
+  // Convert from snake_case DB format to camelCase for frontend
+  return {
+    id: data.id,
+    name: data.name,
+    frequency: data.frequency,
+    dayOfWeek: data.day_of_week,
+    date: data.date,
+    venueName: data.venue_name,
+    location: data.location,
+    time: data.time,
+    dealType: data.deal_type,
+    commissionBrackets: data.commission_brackets,
+    isPaidFromEachBracket: data.is_paid_from_each_bracket,
+    rumbaPercentage: data.rumba_percentage,
+    entrancePercentage: data.entrance_percentage,
+    paymentTerms: data.payment_terms,
+    partners: data.partners,
+    eventData: data.event_data,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  };
+}
+
+// Delete an event
+export async function deleteEventFromDB(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('events')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting event from Supabase:', error);
+    throw error;
   }
-};
-
-// Migrate existing localStorage data to IndexedDB
-export const migrateLocalStorageToIndexedDB = async (userId: string): Promise<void> => {
-  try {
-    const EVENTS_STORAGE_KEY = 'nightlife-events';
-    const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
-    
-    if (eventsJson) {
-      const events = JSON.parse(eventsJson) as Event[];
-      
-      // Process events in sequence
-      for (const event of events) {
-        await saveEventToDB(event, userId);
-      }
-      
-      // Clear localStorage after migration
-      localStorage.removeItem(EVENTS_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.error('Error migrating localStorage data:', error);
-  }
-};
-
-// Export functions
-export { getAllEvents as getEvents };
-export { getSingleEvent as getEvent };
-export { saveEventToDB as saveEvent };
-export { deleteEventFromDB as deleteEvent };
+}

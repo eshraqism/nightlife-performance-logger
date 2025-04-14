@@ -9,7 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          commission_brackets: Json
+          created_at: string | null
+          date: string
+          day_of_week: string | null
+          deal_type: string
+          entrance_percentage: number | null
+          event_data: Json
+          frequency: string
+          id: string
+          is_paid_from_each_bracket: boolean
+          location: string | null
+          name: string
+          partners: Json
+          payment_terms: string
+          rumba_percentage: number
+          time: string | null
+          updated_at: string | null
+          user_id: string
+          venue_name: string
+        }
+        Insert: {
+          commission_brackets: Json
+          created_at?: string | null
+          date: string
+          day_of_week?: string | null
+          deal_type: string
+          entrance_percentage?: number | null
+          event_data?: Json
+          frequency: string
+          id: string
+          is_paid_from_each_bracket: boolean
+          location?: string | null
+          name: string
+          partners: Json
+          payment_terms: string
+          rumba_percentage: number
+          time?: string | null
+          updated_at?: string | null
+          user_id: string
+          venue_name: string
+        }
+        Update: {
+          commission_brackets?: Json
+          created_at?: string | null
+          date?: string
+          day_of_week?: string | null
+          deal_type?: string
+          entrance_percentage?: number | null
+          event_data?: Json
+          frequency?: string
+          id?: string
+          is_paid_from_each_bracket?: boolean
+          location?: string | null
+          name?: string
+          partners?: Json
+          payment_terms?: string
+          rumba_percentage?: number
+          time?: string | null
+          updated_at?: string | null
+          user_id?: string
+          venue_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

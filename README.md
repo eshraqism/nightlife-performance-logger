@@ -1,8 +1,16 @@
+
 # Welcome to your Rumba Party Project
 
 ## Project info
 
 **URL**: Soon
+
+## Database
+
+This project uses Supabase as the backend database. The database schema includes:
+
+- Events table with row-level security (RLS) policies to ensure users can only access their own data
+- Authentication system for user management
 
 ## How can I edit this code?
 
@@ -52,11 +60,11 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
-
+- Supabase (for backend database and authentication)

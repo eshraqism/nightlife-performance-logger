@@ -78,6 +78,6 @@ export type Event = {
   paymentTerms: PaymentTerms;
   partners: Partner[];
   eventData: EventData[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
