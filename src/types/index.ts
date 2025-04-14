@@ -1,8 +1,17 @@
+
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-export type DealType = 'Revenue Share' | 'Entrance Deal' | 'Both';
+export type DealType = 'Revenue Share' | 'Revenue Share & Entrance Deal';
 
-export type PaymentTerms = '50% upfront' | 'Weekly' | 'Bi-weekly' | 'Monthly' | 'End of month' | 'Other';
+export type PaymentTerms = 'One week' | 'Two weeks' | 'Three weeks' | 'One month';
+
+export type EventFrequency = 'Weekly' | 'Monthly' | 'One Time';
+
+export type CommissionBracket = {
+  percentage: number;
+  fromAmount: number;
+  toAmount: number | null;  // null represents unlimited
+};
 
 export type Partner = {
   name: string;
@@ -41,6 +50,8 @@ export type EventData = {
   adSpend: AdSpend[];
   leadsCollected: number;
   doorRevenue?: number; // Only for 'Entrance Deal'
+  entranceRevenue?: number; // Only for 'Revenue Share & Entrance Deal'
+  entrancePercentage?: number; // Only for 'Revenue Share & Entrance Deal'
   totalRevenue: number;
   totalAttendees: number;
   tablesFromRumba: number;
@@ -53,13 +64,14 @@ export type EventData = {
 export type Event = {
   id: string;
   name: string;
-  dayOfWeek: DayOfWeek;
+  frequency: EventFrequency;
+  dayOfWeek?: DayOfWeek; // Required for weekly events
   date: string; // ISO string date of the event start
-  time: string;
   venueName: string;
-  location: string;
   dealType: DealType;
-  rumbaPercentage: number;
+  commissionBrackets: CommissionBracket[];
+  isPaidFromEachBracket: boolean;
+  entrancePercentage?: number; // Only for 'Revenue Share & Entrance Deal'
   paymentTerms: PaymentTerms;
   partners: Partner[];
   eventData: EventData[];
