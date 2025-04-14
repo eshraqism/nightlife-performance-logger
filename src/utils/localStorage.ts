@@ -1,10 +1,10 @@
+
 import { Event } from '../types';
 import { 
   getAllEvents, 
   saveEventToDB, 
   deleteEventFromDB, 
-  getSingleEvent,
-  generateId  // Import generateId from db.ts
+  getSingleEvent
 } from './db';
 
 // These functions will now call the database functions but maintain the same interface

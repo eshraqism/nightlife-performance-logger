@@ -1,7 +1,59 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { Event } from '../types';
+import { Event, EventFrequency, DayOfWeek, DealType, PaymentTerms, CommissionBracket, Partner, EventData } from '../types';
 import { supabase } from '../integrations/supabase/client';
+
+// Generate a unique ID
+export function generateId(): string {
+  return uuidv4();
+}
+
+// Authentication
+export async function createUser(username: string, password: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: username,
+      password: password
+    });
+    
+    if (error) throw error;
+    return data.user?.id || null;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+export async function authenticateUser(username: string, password: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+    
+    if (error) throw error;
+    return data.user?.id || null;
+  } catch (error) {
+    console.error('Error authenticating user:', error);
+    return null;
+  }
+}
+
+export async function getUser(userId: string): Promise<{ id: string; username: string } | null> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    
+    if (error || !data.user) return null;
+    
+    return {
+      id: data.user.id,
+      username: data.user.email || ''
+    };
+  } catch (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+}
 
 // Create a new event
 export async function saveEventToDB(event: Event, userId: string): Promise<Event> {
@@ -51,20 +103,20 @@ export async function saveEventToDB(event: Event, userId: string): Promise<Event
   return {
     id: data.id,
     name: data.name,
-    frequency: data.frequency,
-    dayOfWeek: data.day_of_week,
+    frequency: data.frequency as EventFrequency,
+    dayOfWeek: data.day_of_week as DayOfWeek | undefined,
     date: data.date,
     venueName: data.venue_name,
     location: data.location,
     time: data.time,
-    dealType: data.deal_type,
-    commissionBrackets: data.commission_brackets,
+    dealType: data.deal_type as DealType,
+    commissionBrackets: data.commission_brackets as CommissionBracket[],
     isPaidFromEachBracket: data.is_paid_from_each_bracket,
     rumbaPercentage: data.rumba_percentage,
     entrancePercentage: data.entrance_percentage,
-    paymentTerms: data.payment_terms,
-    partners: data.partners,
-    eventData: data.event_data,
+    paymentTerms: data.payment_terms as PaymentTerms,
+    partners: data.partners as Partner[],
+    eventData: data.event_data as EventData[],
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };
@@ -87,20 +139,20 @@ export async function getAllEvents(userId: string): Promise<Event[]> {
   return data.map(event => ({
     id: event.id,
     name: event.name,
-    frequency: event.frequency,
-    dayOfWeek: event.day_of_week,
+    frequency: event.frequency as EventFrequency,
+    dayOfWeek: event.day_of_week as DayOfWeek | undefined,
     date: event.date,
     venueName: event.venue_name,
     location: event.location,
     time: event.time,
-    dealType: event.deal_type,
-    commissionBrackets: event.commission_brackets,
+    dealType: event.deal_type as DealType,
+    commissionBrackets: event.commission_brackets as CommissionBracket[],
     isPaidFromEachBracket: event.is_paid_from_each_bracket,
     rumbaPercentage: event.rumba_percentage,
     entrancePercentage: event.entrance_percentage,
-    paymentTerms: event.payment_terms,
-    partners: event.partners,
-    eventData: event.event_data,
+    paymentTerms: event.payment_terms as PaymentTerms,
+    partners: event.partners as Partner[],
+    eventData: event.event_data as EventData[],
     createdAt: event.created_at,
     updatedAt: event.updated_at
   }));
@@ -126,20 +178,20 @@ export async function getSingleEvent(id: string): Promise<Event | null> {
   return {
     id: data.id,
     name: data.name,
-    frequency: data.frequency,
-    dayOfWeek: data.day_of_week,
+    frequency: data.frequency as EventFrequency,
+    dayOfWeek: data.day_of_week as DayOfWeek | undefined,
     date: data.date,
     venueName: data.venue_name,
     location: data.location,
     time: data.time,
-    dealType: data.deal_type,
-    commissionBrackets: data.commission_brackets,
+    dealType: data.deal_type as DealType,
+    commissionBrackets: data.commission_brackets as CommissionBracket[],
     isPaidFromEachBracket: data.is_paid_from_each_bracket,
     rumbaPercentage: data.rumba_percentage,
     entrancePercentage: data.entrance_percentage,
-    paymentTerms: data.payment_terms,
-    partners: data.partners,
-    eventData: data.event_data,
+    paymentTerms: data.payment_terms as PaymentTerms,
+    partners: data.partners as Partner[],
+    eventData: data.event_data as EventData[],
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };
