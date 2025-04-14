@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -55,7 +54,6 @@ const EventDetail = () => {
   const [saving, setSaving] = useState(false);
   const [showAddEntryForm, setShowAddEntryForm] = useState(false);
   
-  // New entry form state
   const [formDate, setFormDate] = useState('');
   const [promoters, setPromoters] = useState<Promoter[]>([{ name: '', commission: 0 }]);
   const [staff, setStaff] = useState<Staff[]>([{ role: '', name: '', payment: 0 }]);
@@ -71,7 +69,6 @@ const EventDetail = () => {
   const [daysUntilPaid, setDaysUntilPaid] = useState<number | undefined>(undefined);
   const [notes, setNotes] = useState('');
   
-  // Get the event data on component mount
   useEffect(() => {
     async function loadEvent() {
       if (id && currentUser?.id) {
@@ -95,7 +92,6 @@ const EventDetail = () => {
     loadEvent();
   }, [id, navigate, currentUser]);
   
-  // Format the date for display
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -104,7 +100,6 @@ const EventDetail = () => {
     });
   };
   
-  // Calculate totals for the summary
   const calculateSummary = () => {
     if (!event || event.eventData.length === 0) return null;
     
@@ -127,7 +122,6 @@ const EventDetail = () => {
     };
   };
   
-  // Handlers for adding/removing form fields
   const addPromoter = () => {
     setPromoters([...promoters, { name: '', commission: 0 }]);
   };
@@ -196,27 +190,23 @@ const EventDetail = () => {
     setAdSpend(updatedAdSpend);
   };
   
-  // Submit the new event data
   const handleSubmitEventData = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event || !currentUser?.id) return;
     
     setSaving(true);
     
-    // Validate form
     if (!formDate || totalRevenue <= 0) {
       toast.error('Please fill in all required fields');
       setSaving(false);
       return;
     }
     
-    // Filter out empty fields
     const filteredPromoters = promoters.filter(p => p.name.trim() !== '');
     const filteredStaff = staff.filter(s => s.name.trim() !== '');
     const filteredVipGirls = vipGirls.filter(v => v.name.trim() !== '');
     const filteredAdSpend = adSpend.filter(a => a.platform.trim() !== '');
     
-    // Create new event data
     const newEventData: EventData = {
       promoters: filteredPromoters,
       staff: filteredStaff,
@@ -234,7 +224,6 @@ const EventDetail = () => {
       notes
     };
     
-    // Add the new event data to the event
     const updatedEvent = {
       ...event,
       eventData: [...event.eventData, newEventData],
@@ -242,15 +231,12 @@ const EventDetail = () => {
     };
     
     try {
-      // Save the updated event
       await saveEvent(updatedEvent, currentUser.id);
       setEvent(updatedEvent);
       
-      // Reset form and hide it
       resetForm();
       setShowAddEntryForm(false);
       
-      // Show success toast
       toast.success('Event data added successfully!');
     } catch (error) {
       console.error('Error saving event:', error);
@@ -260,7 +246,6 @@ const EventDetail = () => {
     }
   };
   
-  // Reset the form
   const resetForm = () => {
     setFormDate('');
     setPromoters([{ name: '', commission: 0 }]);
@@ -278,7 +263,6 @@ const EventDetail = () => {
     setNotes('');
   };
   
-  // Delete an event data entry
   const handleDeleteEventData = async (index: number) => {
     if (!event || !currentUser?.id) return;
     
@@ -304,7 +288,6 @@ const EventDetail = () => {
     }
   };
   
-  // Delete the entire event
   const handleDeleteEvent = async () => {
     if (!event) return;
     
@@ -321,7 +304,6 @@ const EventDetail = () => {
     }
   };
   
-  // Event Data Card Component
   const EventDataCard = ({ data, index }: { data: EventData; index: number }) => {
     const [expanded, setExpanded] = useState(false);
     
@@ -477,10 +459,8 @@ const EventDetail = () => {
     );
   };
   
-  // Calculate the summary data
   const summary = calculateSummary();
   
-  // If loading, show a loading spinner
   if (loading) {
     return (
       <Container>
@@ -491,7 +471,6 @@ const EventDetail = () => {
     );
   }
   
-  // If no event found, show an error
   if (!event) {
     return (
       <Container>
@@ -516,7 +495,6 @@ const EventDetail = () => {
   return (
     <Container>
       <div className="py-10 space-y-8 animate-fadeIn">
-        {/* Header and actions */}
         <div>
           <button 
             onClick={() => navigate(-1)}
@@ -563,7 +541,6 @@ const EventDetail = () => {
           </div>
         </div>
         
-        {/* Event details */}
         <div className="glass-card rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4">Event Details</h2>
           
@@ -643,7 +620,6 @@ const EventDetail = () => {
           </div>
         </div>
         
-        {/* Summary */}
         {summary && (
           <div className="glass-card rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Summary</h2>
@@ -682,7 +658,6 @@ const EventDetail = () => {
           </div>
         )}
         
-        {/* Add Event Data Form */}
         {showAddEntryForm && (
           <form onSubmit={handleSubmitEventData} className="glass-card rounded-xl p-6 space-y-8 animate-slideUp">
             <h2 className="text-xl font-semibold">Add Event Data</h2>
@@ -822,7 +797,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Promoters */}
             <div className="space-y-6 pt-6 border-t">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">Promoters</h3>
@@ -891,7 +865,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Staff */}
             <div className="space-y-6 pt-6 border-t">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">Staff</h3>
@@ -973,7 +946,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Table Commissions */}
             <div className="space-y-4 pt-6 border-t">
               <h3 className="text-lg font-medium">Table Commissions</h3>
               
@@ -996,7 +968,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* VIP Girls */}
             <div className="space-y-6 pt-6 border-t">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">VIP Girls Commissions</h3>
@@ -1065,7 +1036,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Ad Spend */}
             <div className="space-y-6 pt-6 border-t">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">Ad Spend</h3>
@@ -1184,7 +1154,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Notes */}
             <div className="space-y-4 pt-6 border-t">
               <h3 className="text-lg font-medium">Notes</h3>
               
@@ -1203,7 +1172,6 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {/* Submit Button */}
             <div className="pt-6 border-t flex justify-end">
               <div className="flex gap-2">
                 <button
@@ -1235,7 +1203,6 @@ const EventDetail = () => {
           </form>
         )}
         
-        {/* Event Data List */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Event Data</h2>
           
