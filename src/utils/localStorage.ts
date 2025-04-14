@@ -4,7 +4,8 @@ import {
   getAllEvents, 
   saveEventToDB, 
   deleteEventFromDB, 
-  getSingleEvent
+  getSingleEvent,
+  generateId
 } from './db';
 
 // These functions will now call the database functions but maintain the same interface
