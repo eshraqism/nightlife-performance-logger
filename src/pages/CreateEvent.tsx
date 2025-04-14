@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -78,14 +77,14 @@ const PAYMENT_TERMS: PaymentTerms[] = [
 
 const formSchema = z.object({
   name: z.string().min(1, "Event name is required"),
-  frequency: z.enum(['Weekly', 'Monthly', 'One Time']),
-  dayOfWeek: z.enum(DAYS_OF_WEEK).optional(),
+  frequency: z.enum(['Weekly', 'Monthly', 'One Time'] as const),
+  dayOfWeek: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const).optional(),
   date: z.date().optional(),
   venueName: z.string().min(1, "Venue name is required"),
-  dealType: z.enum(['Revenue Share', 'Revenue Share & Entrance Deal']),
+  dealType: z.enum(['Revenue Share', 'Revenue Share & Entrance Deal'] as const),
   isPaidFromEachBracket: z.boolean().default(false),
   entrancePercentage: z.number().min(0).max(100).optional(),
-  paymentTerms: z.enum(PAYMENT_TERMS)
+  paymentTerms: z.enum(['One week', 'Two weeks', 'Three weeks', 'One month'] as const)
 });
 
 const CreateEvent = () => {
@@ -103,19 +102,18 @@ const CreateEvent = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      frequency: "Weekly",
-      dayOfWeek: "Friday",
+      frequency: "Weekly" as const,
+      dayOfWeek: "Friday" as const,
       venueName: "",
-      dealType: "Revenue Share",
+      dealType: "Revenue Share" as const,
       isPaidFromEachBracket: false,
-      paymentTerms: "One week"
+      paymentTerms: "One week" as const
     }
   });
   
   const dealType = form.watch("dealType");
   const frequency = form.watch("frequency");
 
-  // Add a new commission bracket
   const addCommissionBracket = () => {
     const lastBracket = commissionBrackets[commissionBrackets.length - 1];
     const newFromAmount = lastBracket.toAmount !== null ? lastBracket.toAmount : lastBracket.fromAmount + 20000;
@@ -126,14 +124,12 @@ const CreateEvent = () => {
     ]);
   };
   
-  // Remove a commission bracket
   const removeCommissionBracket = (index: number) => {
     if (commissionBrackets.length > 1) {
       setCommissionBrackets(commissionBrackets.filter((_, i) => i !== index));
     }
   };
   
-  // Update a commission bracket
   const updateCommissionBracket = (index: number, field: keyof CommissionBracket, value: number | null) => {
     const updatedBrackets = [...commissionBrackets];
     updatedBrackets[index] = { 
@@ -143,19 +139,16 @@ const CreateEvent = () => {
     setCommissionBrackets(updatedBrackets);
   };
   
-  // Add a partner
   const addPartner = () => {
     setPartners([...partners, { name: '', percentage: 0 }]);
   };
   
-  // Remove a partner
   const removePartner = (index: number) => {
     if (partners.length > 1) {
       setPartners(partners.filter((_, i) => i !== index));
     }
   };
   
-  // Update a partner
   const updatePartner = (index: number, field: keyof Partner, value: string | number) => {
     const updatedPartners = [...partners];
     updatedPartners[index] = { 
@@ -165,28 +158,23 @@ const CreateEvent = () => {
     setPartners(updatedPartners);
   };
 
-  // Validate the form data before submission
   const validateFormData = (formData: z.infer<typeof formSchema>) => {
-    // Validate date based on frequency
     if (formData.frequency !== "Weekly" && !formData.date) {
       toast.error("Please select a date for your event");
       return false;
     }
     
-    // Validate day of week for weekly frequency
     if (formData.frequency === "Weekly" && !formData.dayOfWeek) {
       toast.error("Please select a day of the week for your weekly event");
       return false;
     }
     
-    // Validate entrance percentage for revenue share & entrance deal
     if (formData.dealType === "Revenue Share & Entrance Deal" && 
         (formData.entrancePercentage === undefined || formData.entrancePercentage <= 0)) {
       toast.error("Please enter a valid entrance percentage for revenue share & entrance deal");
       return false;
     }
     
-    // Validate commission brackets
     for (let i = 0; i < commissionBrackets.length; i++) {
       const bracket = commissionBrackets[i];
       if (bracket.percentage <= 0 || bracket.percentage > 100) {
@@ -208,7 +196,6 @@ const CreateEvent = () => {
     return true;
   };
 
-  // Handle form submission  
   const onSubmit = async (formData: z.infer<typeof formSchema>) => {
     if (!currentUser?.id) {
       toast.error("You must be logged in to create an event");
@@ -222,22 +209,23 @@ const CreateEvent = () => {
     setLoading(true);
     
     try {
-      // Filter out empty partners
       const filteredPartners = partners.filter(p => p.name.trim() !== '');
       
-      // Create event object
       const newEvent: EventType = {
         id: generateId(),
         name: formData.name,
         frequency: formData.frequency,
         dayOfWeek: formData.frequency === "Weekly" ? formData.dayOfWeek : undefined,
         date: formData.frequency === "Weekly" 
-          ? new Date().toISOString() // For weekly events, we'll just use current date initially
+          ? new Date().toISOString()
           : formData.date?.toISOString() || new Date().toISOString(),
         venueName: formData.venueName,
+        location: undefined,
+        time: undefined,
         dealType: formData.dealType,
         commissionBrackets: commissionBrackets,
         isPaidFromEachBracket: formData.isPaidFromEachBracket,
+        rumbaPercentage: commissionBrackets[0].percentage,
         entrancePercentage: formData.dealType === "Revenue Share & Entrance Deal" 
           ? formData.entrancePercentage 
           : undefined,
@@ -248,13 +236,10 @@ const CreateEvent = () => {
         updatedAt: new Date().toISOString()
       };
       
-      // Save event to database
       await saveEventToDB(newEvent, currentUser.id);
       
-      // Show success message
       toast.success("Event created successfully!");
       
-      // Navigate to event detail page
       navigate(`/event/${newEvent.id}`);
     } catch (error) {
       console.error("Error creating event:", error);
@@ -262,8 +247,7 @@ const CreateEvent = () => {
       setLoading(false);
     }
   };
-  
-  // Render the create event form
+
   return (
     <Container>
       <div className="py-10 animate-fadeIn">
@@ -291,7 +275,6 @@ const CreateEvent = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Event Name */}
                   <FormField
                     control={form.control}
                     name="name"
@@ -309,7 +292,6 @@ const CreateEvent = () => {
                     )}
                   />
                   
-                  {/* Frequency */}
                   <FormField
                     control={form.control}
                     name="frequency"
@@ -336,7 +318,6 @@ const CreateEvent = () => {
                     )}
                   />
                   
-                  {/* Day of Week (for weekly events) */}
                   {frequency === "Weekly" && (
                     <FormField
                       control={form.control}
@@ -365,7 +346,6 @@ const CreateEvent = () => {
                     />
                   )}
                   
-                  {/* Date Picker (for monthly or one-time events) */}
                   {(frequency === "Monthly" || frequency === "One Time") && (
                     <FormField
                       control={form.control}
@@ -408,7 +388,6 @@ const CreateEvent = () => {
                     />
                   )}
                   
-                  {/* Venue Name */}
                   <FormField
                     control={form.control}
                     name="venueName"
@@ -436,7 +415,6 @@ const CreateEvent = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Deal Type */}
                   <FormField
                     control={form.control}
                     name="dealType"
@@ -463,7 +441,6 @@ const CreateEvent = () => {
                     )}
                   />
                   
-                  {/* Entrance Percentage (for Revenue Share & Entrance Deal) */}
                   {dealType === "Revenue Share & Entrance Deal" && (
                     <FormField
                       control={form.control}
@@ -490,7 +467,6 @@ const CreateEvent = () => {
                     />
                   )}
                   
-                  {/* Payment Terms */}
                   <FormField
                     control={form.control}
                     name="paymentTerms"
@@ -518,7 +494,6 @@ const CreateEvent = () => {
                   />
                 </div>
                 
-                {/* Commission Structure */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Commission Structure</h3>
@@ -590,7 +565,6 @@ const CreateEvent = () => {
                     ))}
                   </div>
                   
-                  {/* Checkbox for bracket calculation method */}
                   <FormField
                     control={form.control}
                     name="isPaidFromEachBracket"
@@ -633,7 +607,6 @@ const CreateEvent = () => {
               </CardContent>
             </Card>
             
-            {/* Partners */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <div>

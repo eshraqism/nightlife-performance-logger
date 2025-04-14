@@ -68,12 +68,12 @@ export type Event = {
   dayOfWeek?: DayOfWeek; // Required for weekly events
   date: string; // ISO string date of the event start
   venueName: string;
-  location?: string; // Added missing property
-  time?: string; // Added missing property
+  location?: string; 
+  time?: string; 
   dealType: DealType;
   commissionBrackets: CommissionBracket[];
   isPaidFromEachBracket: boolean;
-  rumbaPercentage: number; // Added missing property
+  rumbaPercentage: number;
   entrancePercentage?: number; // Only for 'Revenue Share & Entrance Deal'
   paymentTerms: PaymentTerms;
   partners: Partner[];
